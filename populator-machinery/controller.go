@@ -77,6 +77,7 @@ type stringSet struct {
 }
 
 type controller struct {
+	crNamespace        string
 	populatorNamespace string
 	populatedFromAnno  string
 	pvcFinalizer       string
@@ -105,7 +106,7 @@ type controller struct {
 }
 
 func RunController(masterURL, kubeconfig, imageName, httpEndpoint, metricsPath, namespace, prefix string,
-	gk schema.GroupKind, gvr schema.GroupVersionResource, mountPath, devicePath string,
+	gk schema.GroupKind, gvr schema.GroupVersionResource, mountPath, devicePath, crNamespace string,
 	populatorArgs func(bool, *unstructured.Unstructured) ([]string, error),
 ) {
 	klog.Infof("Starting populator controller for %s", gk)
@@ -148,6 +149,7 @@ func RunController(masterURL, kubeconfig, imageName, httpEndpoint, metricsPath, 
 		kubeClient:         kubeClient,
 		imageName:          imageName,
 		populatorNamespace: namespace,
+		crNamespace:        crNamespace,
 		devicePath:         devicePath,
 		mountPath:          mountPath,
 		populatedFromAnno:  prefix + "/" + populatedFromAnnoSuffix,
@@ -572,7 +574,7 @@ func (c *controller) syncPvc(ctx context.Context, key, pvcNamespace, pvcName str
 			if waitForFirstConsumer {
 				pod.Spec.NodeName = nodeName
 			}
-			_, err = c.kubeClient.CoreV1().Pods(c.populatorNamespace).Create(ctx, pod, metav1.CreateOptions{})
+			_, err = c.kubeClient.CoreV1().Pods(c.crNamespace).Create(ctx, pod, metav1.CreateOptions{})
 			if err != nil {
 				c.recorder.Eventf(pvc, corev1.EventTypeWarning, reasonPodCreationError, "Failed to create populator pod: %s", err)
 				return err
