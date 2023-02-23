@@ -1,4 +1,4 @@
-module github.com/kubev2v/lib-volume-populator
+module github.com/bennyz/lib-volume-populator
 
 go 1.19
 
